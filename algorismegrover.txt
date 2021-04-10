@@ -1,0 +1,516 @@
+C	Tasca 4 apartats D i E
+	program algorisme groover
+	implicit none
+C	Definim els estats |0> i |1>	
+	complex zero(2,1), un(2,1)
+C	Paràmetres de dimensionalitat de les matrius i índexos
+	integer n1, m1, n, m
+	integer i, j, k, l
+	parameter (n1=2)
+	parameter (m1=2)
+	parameter (n=4)
+	parameter (m=1)
+C	Variables que utilitzarem per la porta Z
+	complex*8 bra(n,m), ket(m,n), res(n,n), II(n1,m1), ZZ(n1,m1)
+	complex*8 ZZ1(n*n1,n*m1),ZZtot(n*n1,n*m1)
+C	Variables que utilitzarem per la porta de Hadamard
+	complex*8 H1, HH, HHH	
+	dimension H1(n1,m1)
+	dimension HH(n1*n1,m1*m1), HHH(n1**3,m1**3)
+C	Variables que utilitzarem per la porta X
+	complex*8 X1,XX,XXX	
+	dimension X1(n1,m1)
+	dimension XX(n1*n1,m1*m1), XXX(n1**3,m1**3)
+c	Matriu de l'operador Oracle
+	complex*8 Oracle(8,8)
+C	Base de 3 qbits
+	integer q3
+	parameter (q3=8)
+	complex*8 zer(q3,1),uu(q3,1),dos(q3,1),tres(q3,1),quat(q3,1)
+	complex*8 cinc(q3,1), sis(q3,1), set(q3,1), nket(1,q3)
+C	Funcions d'ona
+	complex*8 fun0(q3,1), fun1(q3,1), fun2(q3,1), fun3(q3,1)
+	complex*8 fun4(q3,1), fun5(q3,1), fun6(q3,1), funf(q3,1)
+C	Probabilitats i valors esperats
+	complex*8 alpha(1,1)
+	real*8 p0,p1,p2,p3,p4,p5,p6,p7,ve,sigma
+	real*8 pr(q3),suma,xrand, sumcuad
+	integer mesura(q3),para
+	
+	
+C	Definim la base en la que treballarem	
+C	Cada qbit:
+	zero=reshape((/(1,0),(0,0)/),(/2,1/))
+	un=reshape((/(0,0),(1,0)/),(/2,1/))
+C	|0>=|000>
+	call OPERADOR(zero,zero,2,1,2,1,bra)
+	call OPERADOR(bra,zero,n,m,2,1,zer)
+C	print*, zer
+C	|1>=|001>
+	call OPERADOR(zero,zero,2,1,2,1,bra)
+	call OPERADOR(bra,un,n,m,2,1,uu)
+C	print*, uu
+C	|2>=|010>
+	call OPERADOR(zero,un,2,1,2,1,bra)
+	call OPERADOR(bra,zero,n,m,2,1,dos)
+C	print*, dos
+C	|3>=|011>
+	call OPERADOR(zero,un,2,1,2,1,bra)
+	call OPERADOR(bra,un,n,m,2,1,tres)
+C	print*, tres
+C	|4>=|100>
+	call OPERADOR(un,zero,2,1,2,1,bra)
+	call OPERADOR(bra,zero,n,m,2,1,quat)
+C	print*, quat
+C	|5>=|101>
+	call OPERADOR(un,zero,2,1,2,1,bra)
+	call OPERADOR(bra,un,n,m,2,1,cinc)
+C	print*, cinc
+C	|6>=|110>
+	call OPERADOR(un,un,2,1,2,1,bra)
+	call OPERADOR(bra,zero,n,m,2,1,sis)
+C	print*, sis
+C	|7>=|111>
+	call OPERADOR(un,un,2,1,2,1,bra)
+	call OPERADOR(bra,un,n,m,2,1,set)
+C	print*, set
+					
+
+
+C	Definim les matrius amb les que treballarem	
+C	Calculem la matriu corresponent a la porta de Hadmard de 3 qbits
+C	Definim H1, porta de Hadmard d'un qbit
+	H1=reshape((/(1,0),(1,0),(1,0),(-1,0)/),(/n1,m1/))
+	H1=(1.d0/sqrt(2.d0))*H1
+	
+	call OPERADOR(H1,H1,n1,m1,n1,m1,HH)
+	call OPERADOR(HH,H1,n1*n1,m1*m1,n1,m1,HHH)
+C	Imprimim la matriu resultant
+
+C	do i=1,8
+C		print*,(HHH(i,j),j=1,8)
+C	enddo
+
+
+C	Calculem la matriu corresponent a la porta de X de 3 qbits
+C	Definim X1, porta X d'un qbit	
+	X1=reshape((/(0,0),(1,0),(1,0),(0,0)/),(/n1,m1/))                       
+
+	call OPERADOR(X1,X1,n1,m1,n1,m1,XX)
+	call OPERADOR(XX,X1,n1*n1,m1*m1,n1,m1,XXX)
+C	Imprimim la matriu resultant
+	
+C	do i=1,8
+C		print*,(XXX(i,j),j=1,8)
+C	enddo
+
+	
+C	Calculem la matriu corresponent a la porta Z	
+C	Si els primers dos qbits no estàn a |1> actua l'operador identitat
+C	Per tant sumem les tres contribucions que corresponen a 
+C	|00><00|,|01><01|,|10><10|
+C	ZZtot és la matriu que busquem, mentre II i ZZ són les matrius 
+C	corresponents als operadors identitat i Z d'un qbit.
+	ZZtot=(0,0)
+	II=reshape((/(1,0),(0,0),(0,0),(1,0)/),(/n1,m1/))
+	ZZ=reshape((/(1,0),(0,0),(0,0),(-1,0)/),(/n1,m1/))
+C	Contribució |00><00| x I
+C	Calculem |00>:
+	call OPERADOR(zero, zero, 2,1,2,1,bra)
+C	Ho trasposem i fem la multiplicació |00><00|
+	ket=transpose(conjg(bra))
+	call multiplicacio(bra, ket, n, m, m, n, res)
+C	Apliquem la identitat i ho afegim a la matriu resultant
+	call OPERADOR(res,II,n,n,n1,m1,ZZ1)
+	ZZtot=ZZtot+ZZ1
+C	Anàlogament calculem les contribucions que falten
+C	Contribució |01><01| x I
+	call OPERADOR(zero, un, 2,1,2,1,bra)
+	ket=transpose(conjg(bra))
+	call multiplicacio(bra, ket, n, m, m, n, res)
+	call OPERADOR(res,II,n,n,n1,m1,ZZ1)
+	ZZtot=ZZtot+ZZ1
+C	Contribució |10><10| x I
+	call OPERADOR(un, zero, 2,1,2,1,bra)
+	ket=transpose(conjg(bra))
+	call multiplicacio(bra, ket, n, m, m, n, res)
+	call OPERADOR(res,II,n,n,n1,m1,ZZ1)
+	ZZtot=ZZtot+ZZ1
+C	Contribució |11><11| x Z
+	call OPERADOR(un, un, 2,1,2,1,bra)
+	ket=transpose(conjg(bra))
+	call multiplicacio(bra, ket, n, m, m, n, res)
+	call OPERADOR(res,ZZ,n,n,n1,m1,ZZ1)
+	ZZtot=ZZtot+ZZ1
+C	Imprimim la matriu resultant
+	
+C	do i=1,8
+C		print*,(ZZtot(i,j),j=1,8)
+C	enddo
+	
+C	Definim la matriu oracle pq canvi el signe a |4>
+	Oracle=reshape((/(1,0),(0,0),(0,0),(0,0),(0,0),(0,0),(0,0),(0,0)   
+     $ ,(0,0),(1,0),(0,0),(0,0),(0,0),(0,0),(0,0),(0,0),
+     $ (0,0),(0,0),(1,0),(0,0),(0,0),(0,0),(0,0),(0,0),
+     $ (0,0),(0,0),(0,0),(1,0),(0,0),(0,0),(0,0),(0,0),
+     $ (0,0),(0,0),(0,0),(0,0),(-1,0),(0,0),(0,0),(0,0),
+     $ (0,0),(0,0),(0,0),(0,0),(0,0),(1,0),(0,0),(0,0),
+     $ (0,0),(0,0),(0,0),(0,0),(0,0),(0,0),(1,0),(0,0),
+     $ (0,0),(0,0),(0,0),(0,0),(0,0),(0,0),(0,0),(1,0)/),(/8,8/))
+C	do i=1,8
+C		print*,(Oracle(i,j),j=1,8)
+C	enddo
+
+
+C	APARTAT D
+C	Apliquem l'algorisme de Groover
+C	L'estat inicial és |000>
+	fun0=zer
+C	Apliquem la porta de Hadmard de 3 qbits a l'estat inicial
+	call multiplicacio(HHH,fun0,8,8,q3,1,fun1)
+	print*, "Estats intermitjos de l'algorisme de Groover"
+	print*,"1",fun1
+C	Apliquem l'Oracle
+	call multiplicacio(Oracle,fun1,8,8,q3,1,fun2)
+	print*, "2",fun2
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun2,8,8,q3,1,fun3)
+	print*, "3",fun3
+C	La porta X
+	call multiplicacio(XXX,fun3,8,8,q3,1,fun4)
+	print*,"4", fun4
+C	La porta Z
+	call multiplicacio(ZZtot,fun4,8,8,q3,1,fun5)
+	print*,"5", fun5
+C	La porta X
+	call multiplicacio(XXX,fun5,8,8,q3,1,fun6)
+	print*,"6", fun6
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun6,8,8,q3,1,funf)
+	print*, "Estat final",funf	
+	
+		
+C	La probabilitat d'obtenir un estat de la base 
+C	la calculem com: |<n|estat final>|²
+C	Probabilitat de que surti |0>:
+	nket=transpose(conjg(zer))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p0=(real(alpha(1,1)))**2
+	print*, "Probabilitats d'obtenir un estat de la base"
+	print*,"P(|0>)", p0
+C	Probabilitat de que surti |1>:
+	nket=transpose(conjg(uu))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p1=(real(alpha(1,1)))**2
+	print*,"P(|1>)",p1
+C	Probabilitat de que surti |2>:
+	nket=transpose(conjg(dos))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p2=(real(alpha(1,1)))**2
+	print*,"P(|2>)",p2
+C	Probabilitat de que surti |3>:
+	nket=transpose(conjg(tres))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p3=(real(alpha(1,1)))**2
+	print*,"P(|3>)",p3
+C	Probabilitat de que surti |4>:
+	nket=transpose(conjg(quat))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p4=(real(alpha(1,1)))**2
+	print*,"P(|4>)",p4
+C	Probabilitat de que surti |5>:
+	nket=transpose(conjg(cinc))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p5=(real(alpha(1,1)))**2
+	print*,"P(|5>)",p5
+C	Probabilitat de que surti |6>:
+	nket=transpose(conjg(sis))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p6=(real(alpha(1,1)))**2
+	print*,"P(|6>)",p6
+C	Probabilitat de que surti |7>:
+	nket=transpose(conjg(set))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p7=(real(alpha(1,1)))**2
+	print*,"P(|7>)",p7
+
+	print*, "Suma probabilitats", p0+p1+p2+p3+p4+p5+p6+p7
+C	Calculem el valor esperat
+	ve=0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7
+
+C	I la seva disperssió
+	sigma=sqrt((0*p0+1*p1+(2**2)*p2+3**2*p3+4**2*p4+5**2*p5+6**2*
+     $  p6+7**2*p7)-(0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7)**2)
+      	print*, "Valor esperat", ve, "Dispersio", sigma
+
+C	Simulem 20 mesures sobre l'estat final
+	pr=(/p0,p1,p2,p3,p4,p5,p6,p7/)
+	mesura=0
+       	do  i=1, 20
+C     Cridem un valor aleatori entre [0,1]
+            	xrand=rand()
+C     Inicialitzem la variable suma que és la suma de les
+C probabilitats utilitzades.
+C     La variable para l'usarem per sortir del següent bucle         
+            	suma=0.d0
+            	para=0
+C     Comencem per n=7 i anem baixant
+            	do j=8,1,-1
+C                 	Anem acumulant probabilitats
+                  	suma=suma+pr(j)
+C           Si xx és més petit que la probabilitat acumulada
+C           sumem 1 a la freqüència corresponent i sortim del bucle.
+                  	if((xrand.le.suma).and.(para.eq.0)) then
+                        	mesura(j)=mesura(j)+1
+                        	para=1
+                  	endif
+            	enddo                   
+      	enddo
+C      	print*, mesura
+C	Calculem el valor esperat i la desviació
+	ve=0.d0
+C	sumacuad és la suma dels quadrats
+	sumcuad=0.d0
+	do i=0,7
+		ve=ve+mesura(i+1)*i
+		sumcuad=sumcuad+mesura(i+1)*i**2
+	enddo
+	ve=ve/20
+	sumcuad=sumcuad/20
+	sigma=sqrt(sumcuad-ve**2)
+	print*, "20 mesures",mesura
+	print*, 'valor esperat',ve, 'dispersio',sigma
+
+
+
+C	Apartat E
+C	Apliquem l'amplificació, per tant considerem la funcio final com
+C	la funció 1, que ja ha passat per la porta de Hadmard:
+	fun1=funf
+C	A partir d'aquí és equivalent al q hem fet anteriorment
+C	Apliquem l'Oracle
+	call multiplicacio(Oracle,fun1,8,8,q3,1,fun2)
+C	print*, "2",fun2
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun2,8,8,q3,1,fun3)
+C	print*, "3",fun3
+C	La porta X
+	call multiplicacio(XXX,fun3,8,8,q3,1,fun4)
+C	print*,"4", fun4
+C	La porta Z
+	call multiplicacio(ZZtot,fun4,8,8,q3,1,fun5)
+C	print*,"5", fun5
+C	La porta X
+	call multiplicacio(XXX,fun5,8,8,q3,1,fun6)
+C	print*,"6", fun6
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun6,8,8,q3,1,funf)
+	print*, "Estat final despres de la segona amplificacio",funf
+	
+C	Calculem el valor esperat de n
+C	Probabilitatsd'obtenir un estat de la base |<n|funf>|²
+C	Probabilitat de que surti |0>:
+	nket=transpose(conjg(zer))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p0=(real(alpha(1,1)))**2
+C	print*,"P0", p0
+C	Probabilitat de que surti |1>:
+	nket=transpose(conjg(uu))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p1=(real(alpha(1,1)))**2
+C	print*,"P1",p1
+C	Probabilitat de que surti |2>:
+	nket=transpose(conjg(dos))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p2=(real(alpha(1,1)))**2
+C	print*,"P2",p2
+C	Probabilitat de que surti |3>:
+	nket=transpose(conjg(tres))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p3=(real(alpha(1,1)))**2
+C	print*,"P3",p3
+C	Probabilitat de que surti |4>:
+	nket=transpose(conjg(quat))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p4=(real(alpha(1,1)))**2
+C	print*,"P4",p4
+C	Probabilitat de que surti |5>:
+	nket=transpose(conjg(cinc))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p5=(real(alpha(1,1)))**2
+C	print*,"P5",p5
+C	Probabilitat de que surti |6>:
+	nket=transpose(conjg(sis))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p6=(real(alpha(1,1)))**2
+C	print*,"P6",p6
+C	Probabilitat de que surti |7>:
+	nket=transpose(conjg(set))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p7=(real(alpha(1,1)))**2
+C	print*,"P7",p7
+C	Calcul del valor esperat i la disperssio
+	ve=0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7
+	
+	sigma=sqrt((0*p0+1*p1+2**2*p2+3**2*p3+4**2*p4+5**2*p5+6**2*
+     $  p6+7**2*p7)-(0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7)**2)
+     	print*, "Despres de dues amplificacions"
+      	print*, "Valor esperat", ve, "Dispersio", sigma
+
+	
+	
+C	Apliquem una altra amplificació
+	fun1=funf
+C	A partir d'aquí és equivalent al q hem fet anteriorment
+C	Apliquem l'Oracle
+	call multiplicacio(Oracle,fun1,8,8,q3,1,fun2)
+C	print*, "2",fun2
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun2,8,8,q3,1,fun3)
+C	print*, "3",fun3
+C	La porta X
+	call multiplicacio(XXX,fun3,8,8,q3,1,fun4)
+C	print*,"4", fun4
+C	La porta Z
+	call multiplicacio(ZZtot,fun4,8,8,q3,1,fun5)
+C	print*,"5", fun5
+C	La porta X
+	call multiplicacio(XXX,fun5,8,8,q3,1,fun6)
+C	print*,"6", fun6
+C	La porta de Hadmard
+	call multiplicacio(HHH,fun6,8,8,q3,1,funf)
+	print*, "Estat final despres de la tercera amplificacio",funf
+	
+C	Calculem el valor esperat de n
+C	Probabilitatsd'obtenir un estat de la base |<n|funf>|²
+C	Probabilitat de que surti |0>:
+	nket=transpose(conjg(zer))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p0=(real(alpha(1,1)))**2
+C	print*,"P0", p0
+C	Probabilitat de que surti |1>:
+	nket=transpose(conjg(uu))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p1=(real(alpha(1,1)))**2
+C	print*,"P1",p1
+C	Probabilitat de que surti |2>:
+	nket=transpose(conjg(dos))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p2=(real(alpha(1,1)))**2
+C	print*,"P2",p2
+C	Probabilitat de que surti |3>:
+	nket=transpose(conjg(tres))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p3=(real(alpha(1,1)))**2
+C	print*,"P3",p3
+C	Probabilitat de que surti |4>:
+	nket=transpose(conjg(quat))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p4=(real(alpha(1,1)))**2
+C	print*,"P4",p4
+C	Probabilitat de que surti |5>:
+	nket=transpose(conjg(cinc))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p5=(real(alpha(1,1)))**2
+C	print*,"P5",p5
+C	Probabilitat de que surti |6>:
+	nket=transpose(conjg(sis))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p6=(real(alpha(1,1)))**2
+C	print*,"P6",p6
+C	Probabilitat de que surti |7>:
+	nket=transpose(conjg(set))
+	call multiplicacio(nket,funf,1,q3,q3,1,alpha)
+	p7=(real(alpha(1,1)))**2
+C	print*,"P7",p7
+C	Calcul del valor esperat i la disperssio
+	ve=0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7
+	
+	sigma=sqrt((0*p0+1*p1+2**2*p2+3**2*p3+4**2*p4+5**2*p5+6**2*
+     $  p6+7**2*p7)-(0*p0+1*p1+2*p2+3*p3+4*p4+5*p5+6*p6+7*p7)**2)
+     	print*, "Despres de tres amplificacions"
+      	print*, "Valor esperat", ve, "Dispersio", sigma
+	END
+	
+	
+C	SUBRUTINES
+C	Subrutina que fa l'operació O1 x O2
+C	Variables d'entrada:
+C	Les dues matrius amb les que operem O1 i O2 
+C	i dimensions d'aquestes n1, m1 i n2, m2
+C	Variables de sortida: la matriu resultant
+	subroutine OPERADOR(O1,O2,n1,m1,n2,m2,res)
+	implicit none
+C	Definició de variables
+	complex O1(n1,m1), O2(n2,m2), res
+	integer n1, m1, n2, m2, i, j, k, l, n, m
+C	La matriu resultant tindrà com a dimensions el producte de les
+C	dimensions de les matrius O1 i O2
+	dimension res(n1*n2,m1*m2)
+C	Inicialitzem la matriu resultant
+	res=(0,0)
+C	Fem un bucle que ens recorri la matriu O1, i ens marca les files
+C	i j les columnes.
+	do i=1,n1
+		do j=1,m1
+C		Per cada element de la matriu O1 fem un bucle que ens recorre
+C		O2, k per les files i l per les columnes.
+			do k=1,n2
+				do l=1,m2
+C				print*,"i=",i,"j=",j,"k=",k,"l=",l
+C				La posició de l'element en la matriu 
+C				resultant serà:
+C				Per la fila (n2 són les files de la matriu O2):
+					n=(i-1)*n2+k
+C				Per la columna(m2 són les 
+C				columnes de la matriu O2):
+					m=(j-1)*m2+l
+C				print*, "resultat", n,m
+C				print*, "O1", O1(i,j), "O2", O2(k,l)
+C				L'element corresponent serà la multiplicació
+C				dels elements de les matrius O1 i O2
+					res(n,m)=O1(i,j)*O2(k,l)					
+				enddo	
+			enddo
+		enddo
+	enddo
+	end
+	
+C	Subrutina que multiplica dues matrius
+C	Variables d'entrada:
+C	Les dues matrius amb les que operem O1 i O2 
+C	i dimensions d'aquestes n1, m1 i n2, m2
+C	Variables de sortida: la matriu resultant
+	subroutine multiplicacio(O1,O2,n1,m1,n2,m2,res)
+	implicit none
+C	Definició de variables
+	complex O1(n1,m1), O2(n2,m2), res
+	integer n1, m1, n2, m2, i, j, k, l
+C	La matriu resultant tindrà les mateixes files que O1 i
+C	les columnes de O2.
+	dimension res(n1,m2)
+C	Comprobem si es pot fer la multiplicació,
+C	si O1 té les mateixes columnes que files O2.
+	if (m1.ne.n2) then
+		print*, "No es pot fer la multiplicació"
+		return
+	endif
+C	Inicialitzem la matriu resultant
+	res=(0,0)
+C	Fem un bucle que recorri les files de la matriu O1
+	do i=1,n1
+C		Bucle que recorre les columnes de la matriu O2
+		do l=1,m2
+C			Recorrem tota la columna d'O1
+			do j=1,m1
+C			Multipliquem els elements d'O1 i O2 i ho sumem
+C			al total, fins que haguem recorregut tota la columna.
+				res(i,l)=res(i,l)+O1(i,j)*O2(j,l)
+C				print*,"i=",i,"l=",l,"j=",j,"k=",j
+C				print*, "O1,O2", bra(i,j), ket(j,l)
+C				print*, "reslutat", res(i,l)
+			enddo
+C			print*, "i=",i,"l=",l,"reslutat", res(i,l)
+		enddo
+	enddo
+	end
