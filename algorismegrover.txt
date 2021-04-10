@@ -1,4 +1,5 @@
 Hola això és una prova ,lelelelelel
+prova berta m
 
 C	Tasca 4 apartats D i E
 	program algorisme groover
