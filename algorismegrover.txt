@@ -1,3 +1,5 @@
+Hola això és una prova ,lelelelelel
+
 C	Tasca 4 apartats D i E
 	program algorisme groover
 	implicit none
