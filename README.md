@@ -2,7 +2,7 @@ Our project is a quantum labyrinth were the movement inside comes defined by the
 
 To move in the labyrinth you need to create your circuit, applying gates to two qubits. Depending on the final state you measure in a single shot, the ball is going to move in one direction or another. So if you measure the |00> state the ball is going to move up,|01> down, |10> to the right and |11> to the left. The goal is to find a circuit which gives you a 100% chance to move in the direction you choose. On the other hand, if the circuit you create can collapse to different states, the ball can go to different directions, depending on the probability to get each state. 
 
-You are allowed to use three gates: Hadamard (H), NOT (X) and Rx (R) with pi/2. If you enter another gate, the game won't recognize and will add no gate to the circuit. Make sure to write correctly the gates (H, X, R).
+You are allowed to use three gates: Hadamard (H), NOT (X) and Rx (R) with pi/2. If you enter another gate, the game won't recognize it and will add no gate to the circuit. Make sure to write correctly the gates (H, X, R).
 
 To make the game more entertaining, and add other quantum concepts, you can go through the walls following the rules of the tunneling effect. This means that if the ball is headed in a direction where there is a wall, exists certain probability that the ball will go through. If the wall is thicker, then the probability to go through the wall decreases.
 
@@ -42,6 +42,6 @@ The initial project we wanted to present was a little different from this one. O
 
 At first, we solved the problem for 1 qubit. Implementing an arbitrary rotation U we could reproduce every probability distribution. But for 2 qubits, the universal gate you can implement also implies entanglement and it is more complicated. The technical difficulty of the problem forced us to switch directions. 
 
-We chose this new project because is a classical game that we thought easy to understand and where the user can play with different quantum circuits with a clear goal in mind and relatively easy execution. In the development of this especiffic project we encountered difficulties in the use of a graphic interface because our lack of knowledge in the subject.
+We chose this new project because is a classical game that we thought easy to understand and where the user can play with different quantum circuits with a clear goal in mind and relatively easy execution. In the development of this speciffic project we encountered difficulties in the use of a graphic interface because our lack of knowledge in the subject.
 
 It has been a really fun and challenging experience were we have learned a lot about both quantum and classical computing. 
