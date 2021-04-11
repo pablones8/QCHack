@@ -42,6 +42,6 @@ The initial project we wanted to present was a little different from this one. O
 
 At first, we solved the problem for 1 qubit. Implementing an arbitrary rotation U we could reproduce every probability distribution. But for 2 qubits, the universal gate you can implement also implies entanglement and it is more complicated. The technical difficulty of the problem forced us to switch directions. 
 
-We chose this new project because is a classical game that we thought easy to understand and where the user can play with different quantum circuits with a clear goal in mind and relatively easy execution. In the development of this speciffic project we encountered difficulties in the use of a graphic interface because our lack of knowledge in the subject.
+We chose this new project because is a classical game that we thought easy to understand and where the user can play with different quantum circuits with a clear goal in mind and relatively easy execution. In the development of this specific project we encountered difficulties in the use of a graphic interface because our lack of knowledge in the subject.
 
 It has been a really fun and challenging experience were we have learned a lot about both quantum and classical computing. 
