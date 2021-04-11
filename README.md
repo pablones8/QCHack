@@ -8,7 +8,7 @@ Pablo Rodríguez (pablorogra@gmail.com)
 
 This project is a labyrinth game where you can move by applying gates to a quantum circuit and measuring the final state.
 
-To move in the labyrinth you need to create your circuit, applying gates to the two qubits. Depending on the final state you mesaure, in a single shot, the ball is going to move in one direction or another; so if you measure the |00> state the ball is going to move up, |01> down, |10> to the right and |11> to the left. The objective is to find the circuit that gives you a 100% chance to move in the direction you choose. On the other hand, if the circuit you create can collapse to diferent states the ball can go to diferent directions, depending on the probability to get each state. 
+To move in the labyrinth you need to create your circuit, applying gates to the qubits. Depending on the final state you mesaure, in a single shot, the ball is going to move in one direction or another; so if you measure the |00> state the ball is going to move up, |01> down, |10> to the right and |11> to the left. The objective is to find the circuit that gives you a 100% chance to move in the direction you choose. On the other hand, if the circuit you create can collapse to diferent states the ball can go to diferent directions, depending on the probability to get each state. 
 
 
 You are allowed to use thre different gates: Hadamard (H), NOT (X) and Rx (R) with pi/2. If you insert another gate you need to restart the game.
