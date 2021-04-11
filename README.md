@@ -1,5 +1,7 @@
 #Aquí és on posarem la descripció del projecte
+
 Introducció al projecte
+
 To move in the labyrinth you need to create your circuit, applying gates to the two qubits. Depending on the final state you mesaure, in a single shot, the ball is going to move in one direction or another; so if you mesaure the |00> state the ball is going to move up, |01> down, |10> to the right and |11> to the left. The objective is to find the circuit that gives you a 100% chance to move in the direction you choose. On the other hand, if the circuit you create can collapse to diferent states the ball can go to diferent directions, depending on the probability to get each state. 
 
 QUINES PORTES POTS UTILITZAR
