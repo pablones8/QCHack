@@ -1,5 +1,5 @@
 Team:
-Berta Casas
+Berta Casas (bertacasas17@gmail.com) 
 Clara Colet (claracd98@gmail.com)
 Berta Martínez (bertamp98@gmail.com)
 Adrià Riera (adriariera9.9@gmail.com)
